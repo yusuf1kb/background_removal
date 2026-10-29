@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, dialog, protocol, shell, Menu } = require('
 const fs = require('node:fs');
 const path = require('node:path');
 const { modelIndir, modelHazirMi } = require('./lib/model-indir');
-const { arkaPlaniKaldir, isindir } = require('./lib/arkaplan');
+const { arkaPlaniKaldir, isindir, kapat: arkaplanKapat } = require('./lib/arkaplan');
 
 const APP_DIR = __dirname;
 const MODEL_DIR = (() => {
@@ -243,6 +243,9 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on('window-all-closed', () => app.quit());
+
+  // İşçi iş parçacığı uygulamayı açık tutmasın; çıkışta hemen sonlandır.
+  app.on('will-quit', () => arkaplanKapat());
 }
 
 // ---------------------------------------------------------------------------

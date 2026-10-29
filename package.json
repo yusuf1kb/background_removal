@@ -1,7 +1,7 @@
 {
   "name": "arka-plan-kaldir",
   "productName": "Arka Plan Kaldır",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Fotoğraflara sağ tıklayıp arka planı kaldır, renk ekle ve yeni fotoğraf olarak kaydet.",
   "main": "main.js",
   "private": true,
@@ -43,9 +43,8 @@
       "!**/node_modules/@img/sharp-wasm32/**"
     ],
     "asarUnpack": [
-      "**/node_modules/onnxruntime-node/**",
-      "**/node_modules/sharp/**",
-      "**/node_modules/@img/**"
+      "lib/arkaplan-isci.js",
+      "**/node_modules/**"
     ],
     "extraResources": [
       {

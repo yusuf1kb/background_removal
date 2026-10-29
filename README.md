@@ -11,7 +11,7 @@ Her şey bilgisayarda çalışır: fotoğraflar hiçbir sunucuya gönderilmez.
 
 ## Kurulum (tek tık)
 
-**`ArkaPlanKaldir-Kurulum-1.2.0.exe`** dosyasına çift tıkla. Hepsi bu:
+**`ArkaPlanKaldir-Kurulum-1.2.1.exe`** dosyasına çift tıkla. Hepsi bu:
 
 - yönetici izni istemez, bu kullanıcı için kurulur,
 - Node.js / internet **gerekmez** (yapay zekâ modeli kurulumun içinde),
@@ -103,8 +103,9 @@ dosyası da kullanılabilir. Sağ tık menüsü kaydı ve kısayollar kaldırıl
 
 - Arayüz: Electron 45 + saf HTML/CSS/JS.
 - Arka plan kaldırma: [BiRefNet](https://github.com/ZhengPeng7/BiRefNet) (lite model,
-  1024×1024, ONNX) — `onnxruntime-node` ile ana süreçte çalışır; görüntü işleme
-  `sharp` ile yapılır. Model cihazda çalışır, fotoğraflar hiçbir sunucuya gönderilmez.
+  1024×1024, ONNX) — `onnxruntime-node` ile ayrı bir iş parçacığında (worker thread)
+  çalışır; böylece işlem sırasında pencere donmaz. Görüntü işleme `sharp` ile yapılır.
+  Model cihazda çalışır, fotoğraflar hiçbir sunucuya gönderilmez.
 - Model dosyaları: kurulu uygulamada `resources\models`; geliştirme sırasında
   `models` klasörü, yoksa `%LOCALAPPDATA%\ArkaPlanKaldir\models`.
 - Uygulama dosyaları `ap://local/...` özel protokolüyle sunulur.
@@ -129,7 +130,8 @@ Dosya yapısı:
 main.js                 Electron ana süreç (pencere, dosya, kayıt)
 preload.js              Güvenli IPC köprüsü
 renderer/               Arayüz (index.html, style.css, app.js)
-lib/arkaplan.js         BiRefNet modeli ve maske üretimi
+lib/arkaplan.js         Arka plan işçisini yöneten ana süreç köprüsü
+lib/arkaplan-isci.js    BiRefNet modeli ve maske üretimi (worker thread)
 lib/model-indir.js      Model indirici (geliştirme için)
 tools/kur.mjs           Geliştirici kurulumu (kopyalama, kayıt defteri, kısayol)
 tools/ikon-uret.mjs     Simge üreteci
