@@ -3,7 +3,6 @@
   'use strict';
 
   const kopru = window.kopru;
-  const MODEL_TABANI = 'ap://local/models/';
 
   // ------------------------------------------------------------------ palet
   const PALET = [
@@ -69,7 +68,7 @@
     otoSigdir: true,
     olcek: 1,
     sonRenkler: JSON.parse(localStorage.getItem('sonRenkler') || '[]'),
-    model: 'isnet_quint8'
+    model: 'birefnet'
   };
 
   // ------------------------------------------------------------------ yardımcı
@@ -322,7 +321,7 @@
 
     kaplamaGoster({
       metin: 'Yapay zekâ modeli hazırlanıyor',
-      alt: 'İlk açılışta yaklaşık 54 MB model indirilir. Sonrasında internet gerekmez.',
+      alt: 'Model kurulumla birlikte gelir; ilk açılışta hazırlanır.',
       oran: 0
     });
 
@@ -336,6 +335,25 @@
 
   let istekNo = 0;
 
+  if (kopru.asama) {
+    kopru.asama((asama) => {
+      if (!durum.mesgul) return;
+      if (asama === 'model') {
+        kaplamaGoster({
+          metin: 'Yüksek kalite model yükleniyor',
+          alt: 'İlk fotoğrafta birkaç saniye sürebilir.',
+          oran: null
+        });
+      } else if (asama === 'islem') {
+        kaplamaGoster({
+          metin: 'Arka plan kaldırılıyor',
+          alt: 'Yüksek kalite model çalışıyor…',
+          oran: null
+        });
+      }
+    });
+  }
+
   async function arkaPlaniKaldir(no = istekNo) {
     if (!durum.blob) return;
     durum.mesgul = true;
@@ -345,28 +363,20 @@
     try {
       await modelHazirla();
 
-      if (!window.APBR || typeof window.APBR.removeBackground !== 'function') {
+      if (!kopru.arkaPlanKaldir) {
         throw new Error('Arka plan kaldırma motoru yüklenemedi.');
       }
 
-      kaplamaGoster({ metin: 'Arka plan kaldırılıyor', alt: 'Yapay zekâ özne ile zemini ayırıyor.', oran: null });
+      kaplamaGoster({ metin: 'Arka plan kaldırılıyor', alt: 'Yüksek kalite model özne ile zemini ayırıyor.', oran: null });
 
-      const kesikBlob = await window.APBR.removeBackground(durum.blob, {
-        publicPath: MODEL_TABANI,
-        model: durum.model,
-        device: 'cpu',
-        output: { format: 'image/png' },
-        progress: (anahtar, simdi, toplam) => {
-          if (no !== istekNo) return;
-          const oran = toplam > 0 ? Math.min(1, simdi / toplam) : null;
-          if (String(anahtar).startsWith('fetch:')) {
-            kaplamaGoster({ metin: 'Model yükleniyor', alt: 'Bir kerelik indirme.', oran });
-          } else {
-            kaplamaGoster({ metin: 'Arka plan kaldırılıyor', alt: 'Yapay zekâ özne ile zemini ayırıyor.', oran });
-          }
-        }
-      });
+      const ham = new Uint8Array(await durum.blob.arrayBuffer());
+      const sonuc = await kopru.arkaPlanKaldir(ham);
+      if (no !== istekNo) return;
+      if (!sonuc || !sonuc.tamam) {
+        throw new Error(sonuc && sonuc.hata ? sonuc.hata : 'Arka plan kaldırılamadı.');
+      }
 
+      const kesikBlob = new Blob([sonuc.png], { type: 'image/png' });
       durum.kesik = await createImageBitmap(kesikBlob);
       if (no !== istekNo) {
         durum.kesik.close();
@@ -631,7 +641,7 @@
     if (kaplama.hidden) return;
     kaplamaGoster({
       metin: metin || 'Model indiriliyor',
-      alt: 'İlk açılışta yaklaşık 54 MB model indirilir.',
+      alt: 'Yüksek kalite model hazırlanıyor.',
       oran: typeof oran === 'number' ? oran : 0
     });
   });

@@ -93,12 +93,21 @@ for (const klasor of ['renderer', 'assets', 'lib']) {
     force: true
   });
 }
+
+// Yerel modüller (ONNX Runtime ve sharp) uygulama klasörüne kopyalanır.
+for (const modul of ['onnxruntime-node', 'sharp', '@img']) {
+  fs.cpSync(path.join(KAYNAK, 'node_modules', modul), path.join(UYGULAMA, 'node_modules', modul), {
+    recursive: true,
+    force: true
+  });
+}
+tamam('Arka plan kaldırma modülleri hazır');
 tamam('Uygulama dosyaları: ' + UYGULAMA);
 
 // ------------------------------------------------------------------ 2. model
 adim('Yapay zekâ modeli kontrol ediliyor');
 if (modelHazirMi(MODEL)) {
-  tamam('Model zaten kurulu (53 MB)');
+  tamam('Model zaten kurulu (214 MB)');
 } else {
   uyari('Model indiriliyor, bu işlem bağlantı hızına göre birkaç dakika sürebilir…');
   let son = 0;

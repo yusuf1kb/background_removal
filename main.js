@@ -3,6 +3,7 @@ const { app, BrowserWindow, ipcMain, dialog, protocol, shell, Menu } = require('
 const fs = require('node:fs');
 const path = require('node:path');
 const { modelIndir, modelHazirMi } = require('./lib/model-indir');
+const { arkaPlaniKaldir, isindir } = require('./lib/arkaplan');
 
 const APP_DIR = __dirname;
 const MODEL_DIR = (() => {
@@ -11,7 +12,7 @@ const MODEL_DIR = (() => {
   adaylar.push(path.join(APP_DIR, 'models'));
   adaylar.push(path.join(process.env.LOCALAPPDATA || '', 'ArkaPlanKaldir', 'models'));
   for (const aday of adaylar) {
-    if (fs.existsSync(path.join(aday, 'resources.json'))) return aday;
+    if (fs.existsSync(path.join(aday, 'birefnet', 'model.onnx'))) return aday;
   }
   return adaylar[0];
 })();
@@ -107,6 +108,13 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(null);
   pencereOlustur();
+  if (modelHazirMi(MODEL_DIR)) {
+    setTimeout(() => {
+      isindir(MODEL_DIR).catch(() => {
+        /* ilk fotoğrafta yeniden denenir */
+      });
+    }, 1200);
+  }
 });
 
 function argvGorsel(argv) {
@@ -312,19 +320,11 @@ ipcMain.handle('ap:ilk-dosya', () => {
   return guvenliGorselOku(dosya);
 });
 
-ipcMain.handle('ap:model-durum', () => {
-  let model = 'isnet_quint8';
-  try {
-    model = JSON.parse(fs.readFileSync(path.join(MODEL_DIR, 'model.json'), 'utf8')).model || model;
-  } catch {
-    /* varsayılan */
-  }
-  return {
-    hazir: modelHazirMi(MODEL_DIR),
-    klasor: MODEL_DIR,
-    model
-  };
-});
+ipcMain.handle('ap:model-durum', () => ({
+  hazir: modelHazirMi(MODEL_DIR),
+  klasor: MODEL_DIR,
+  model: 'birefnet'
+}));
 
 ipcMain.handle('ap:model-indir', async () => {
   try {
@@ -339,6 +339,23 @@ ipcMain.handle('ap:model-indir', async () => {
     return { tamam: true, model };
   } catch (hata) {
     return { tamam: false, hata: hata.message };
+  }
+});
+
+ipcMain.handle('ap:arka-plan', async (_olay, veri) => {
+  try {
+    const sonuc = await arkaPlaniKaldir({
+      veri,
+      klasor: MODEL_DIR,
+      haber: (asama) => {
+        if (pencere && !pencere.isDestroyed()) {
+          pencere.webContents.send('ap:asama', asama);
+        }
+      }
+    });
+    return { tamam: true, png: sonuc.png, genislik: sonuc.genislik, yukseklik: sonuc.yukseklik };
+  } catch (hata) {
+    return { tamam: false, hata: String((hata && hata.message) || hata) };
   }
 });
 

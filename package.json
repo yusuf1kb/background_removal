@@ -1,7 +1,7 @@
 {
   "name": "arka-plan-kaldir",
   "productName": "Arka Plan Kaldır",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Fotoğraflara sağ tıklayıp arka planı kaldır, renk ekle ve yeni fotoğraf olarak kaydet.",
   "main": "main.js",
   "private": true,
@@ -9,17 +9,13 @@
   "license": "AGPL-3.0",
   "scripts": {
     "start": "electron .",
-    "bundle": "esbuild src/bgremove.js --bundle --format=iife --global-name=BR --platform=browser --target=chrome120 --outfile=renderer/bgremove.bundle.js --minify",
     "ikon": "node tools/ikon-uret.mjs",
     "kur": "node tools/kur.mjs",
     "paket": "electron-builder --win nsis"
   },
   "devDependencies": {
-    "@imgly/background-removal": "^1.7.0",
     "electron": "45.0.0",
-    "electron-builder": "^26.0.12",
-    "esbuild": "^0.28.2",
-    "onnxruntime-web": "1.21.0"
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.arkaplankaldir.uygulama",
@@ -35,7 +31,21 @@
       "renderer/**/*",
       "lib/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "!**/node_modules/onnxruntime-node/bin/napi-v6/darwin/**",
+      "!**/node_modules/onnxruntime-node/bin/napi-v6/linux/**",
+      "!**/node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**",
+      "!**/node_modules/onnxruntime-node/bin/napi-v6/win32/x64/DirectML.dll",
+      "!**/node_modules/onnxruntime-node/bin/napi-v6/win32/x64/dxcompiler.dll",
+      "!**/node_modules/@img/sharp-darwin-*/**",
+      "!**/node_modules/@img/sharp-linux-*/**",
+      "!**/node_modules/@img/sharp-linuxmusl-*/**",
+      "!**/node_modules/@img/sharp-wasm32/**"
+    ],
+    "asarUnpack": [
+      "**/node_modules/onnxruntime-node/**",
+      "**/node_modules/sharp/**",
+      "**/node_modules/@img/**"
     ],
     "extraResources": [
       {
@@ -47,7 +57,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico",
@@ -69,5 +81,9 @@
       "include": "build/installer.nsh",
       "runAfterFinish": true
     }
+  },
+  "dependencies": {
+    "onnxruntime-node": "1.31.1",
+    "sharp": "0.34.4"
   }
 }

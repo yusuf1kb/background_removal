@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld('kopru', {
   // model
   modelDurum: () => ipcRenderer.invoke('ap:model-durum'),
   modelIndir: () => ipcRenderer.invoke('ap:model-indir'),
+  arkaPlanKaldir: (veri) => ipcRenderer.invoke('ap:arka-plan', veri),
+  asama: (geri) => {
+    const dinleyici = (_olay, asama) => geri(asama);
+    ipcRenderer.on('ap:asama', dinleyici);
+    return () => ipcRenderer.removeListener('ap:asama', dinleyici);
+  },
 
   // olaylar
   dosyaGeldi: (geri) => {

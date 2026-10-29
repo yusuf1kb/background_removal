@@ -2,7 +2,7 @@
 
 Windows için küçük bir masaüstü uygulaması. Bir fotoğrafa **sağ tık**layıp
 **“Arka Planı Kaldır ve Düzenle”** seçiyorsun; uygulama açılıyor, arka planı
-saniyeler içinde kaldırıyor, kaldırılan yere istediğin rengi koyuyorsun ve
+kısa sürede kaldırıyor, kaldırılan yere istediğin rengi koyuyorsun ve
 fotoğrafı yeni bir dosya olarak kaydediyorsun.
 
 Her şey bilgisayarda çalışır: fotoğraflar hiçbir sunucuya gönderilmez.
@@ -11,7 +11,7 @@ Her şey bilgisayarda çalışır: fotoğraflar hiçbir sunucuya gönderilmez.
 
 ## Kurulum (tek tık)
 
-**`ArkaPlanKaldir-Kurulum-1.1.0.exe`** dosyasına çift tıkla. Hepsi bu:
+**`ArkaPlanKaldir-Kurulum-1.2.0.exe`** dosyasına çift tıkla. Hepsi bu:
 
 - yönetici izni istemez, bu kullanıcı için kurulur,
 - Node.js / internet **gerekmez** (yapay zekâ modeli kurulumun içinde),
@@ -59,8 +59,9 @@ uygulamayı `%LOCALAPPDATA%\Programs\ArkaPlanKaldir` içine kopyalar ve modeli i
 ## Kullanım
 
 1. **Fotoğrafa sağ tık** → *Arka Planı Kaldır ve Düzenle*.
-2. Uygulama açılır, arka plan otomatik olarak kaldırılır (ilk seferde model
-   yüklendiği için birkaç saniye sürebilir).
+2. Uygulama açılır, arka plan otomatik olarak kaldırılır. Yüksek kaliteli model
+   ilk fotoğrafta yüklenirken işlem 15–25 saniye sürebilir; sonraki fotoğraflarda
+   genellikle 10–15 saniye sürer (işlemciye göre değişir).
 3. Sağ panelden arka planı seç:
    - **Şeffaf** → arka plansız PNG,
    - **30 renklik palet** → tek tıkla uygula,
@@ -101,23 +102,22 @@ dosyası da kullanılabilir. Sağ tık menüsü kaydı ve kısayollar kaldırıl
 ## Teknik notlar
 
 - Arayüz: Electron 45 + saf HTML/CSS/JS.
-- Arka plan kaldırma: [@imgly/background-removal](https://github.com/imgly/background-removal-js)
-  (ISNet modeli, `onnxruntime-web` / WASM). Model cihazda çalışır, çok iş
-  parçacıklı WASM için `crossOriginIsolated` açıktır.
+- Arka plan kaldırma: [BiRefNet](https://github.com/ZhengPeng7/BiRefNet) (lite model,
+  1024×1024, ONNX) — `onnxruntime-node` ile ana süreçte çalışır; görüntü işleme
+  `sharp` ile yapılır. Model cihazda çalışır, fotoğraflar hiçbir sunucuya gönderilmez.
 - Model dosyaları: kurulu uygulamada `resources\models`; geliştirme sırasında
   `models` klasörü, yoksa `%LOCALAPPDATA%\ArkaPlanKaldir\models`.
 - Uygulama dosyaları `ap://local/...` özel protokolüyle sunulur.
 - Sağ tık menüsü: `HKCU\Software\Classes\SystemFileAssociations\image\shell\ArkaPlanKaldir`
   (yönetici izni gerekmez, yalnızca bu kullanıcı için).
 - Windows 11’de klasik menü öğesi doğrudan sağ tık menüsünde görünür.
-- Model lisansı: IMG.LY background-removal (AGPL-3.0); kişisel kullanım için ücretsizdir.
+- Model lisansı: BiRefNet (MIT).
 
 ### Geliştirme komutları
 
 ```bat
 npm install
 npm start          :: uygulamayı geliştirme modunda aç
-npm run bundle     :: arka plan kaldırma motorunu yeniden paketle
 npm run ikon       :: assets/icon.ico dosyasını üret
 npm run kur         :: geliştirici kurulumunu yenile
 npm run paket       :: kurulum .exe dosyasını üret (dist\)
@@ -129,20 +129,17 @@ Dosya yapısı:
 main.js                 Electron ana süreç (pencere, dosya, kayıt)
 preload.js              Güvenli IPC köprüsü
 renderer/               Arayüz (index.html, style.css, app.js)
-  bgremove.bundle.js    Paketlenmiş arka plan kaldırma motoru
-lib/model-indir.js      Model indirici
+lib/arkaplan.js         BiRefNet modeli ve maske üretimi
+lib/model-indir.js      Model indirici (geliştirme için)
 tools/kur.mjs           Geliştirici kurulumu (kopyalama, kayıt defteri, kısayol)
 tools/ikon-uret.mjs     Simge üreteci
-src/bgremove.js         Motorun paketleme giriş noktası
 build/installer.nsh     Kurulumda sağ tık menüsünü ekleyen NSIS betiği
 kur.bat                 Geliştirici kurulumunu başlatan dosya
 ```
 
-**Lisans:** Arka plan kaldırma için kullanılan
-[@imgly/background-removal](https://github.com/imgly/background-removal-js) kütüphanesi
-**AGPL-3.0** lisanslıdır. Bu yüzden projeyi açık kaynak yaparken **AGPL-3.0** ile
-lisanslaman gerekir (MIT yapamazsın). Ticari/özel lisans istiyorsan IMG.LY'den lisans
-alman ya da motoru kendi modelinle değiştirmen gerekir.
+**Lisans:** Proje **AGPL-3.0** ile lisanslanmıştır. Kullanılan
+[BiRefNet](https://github.com/ZhengPeng7/BiRefNet) modeli ve kodu **MIT**
+lisanslıdır; ticari kullanıma da açıktır.
 
 **İmzasız uygulama uyarısı:** Kod imzası olmadığı için Windows SmartScreen
 “bilinmeyen yayıncı” uyarısı gösterebilir; kullanıcı **Ek bilgi → Yine de çalıştır**
